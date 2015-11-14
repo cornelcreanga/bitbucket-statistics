@@ -9,9 +9,11 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Repository;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.Set;
 
 @Repository
+@Named("BitBucketGatewayImpl")
 public class BitBucketGatewayImpl implements BitBucketGateway {
 
     @Inject
