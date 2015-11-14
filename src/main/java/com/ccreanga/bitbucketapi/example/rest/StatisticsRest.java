@@ -1,6 +1,5 @@
 package com.ccreanga.bitbucketapi.example.rest;
 
-import com.ccreanga.bitbucketapi.example.gateway.BitBucketGateway;
 import com.ccreanga.bitbucketapi.example.interactors.PullRequestsStatistics;
 import org.springframework.stereotype.Component;
 
@@ -15,13 +14,12 @@ import javax.ws.rs.core.Response;
 public class StatisticsRest {
 
     @Inject
-    private BitBucketGateway bitBucketGateway;
+    private PullRequestsStatistics pullRequestsStatistics;
 
     @GET
     @Path("{name}")
     public Response sayHello(@PathParam("name") String name) {
         return Response.status(200).entity("salut " + name).build();
-
     }
 
 }
