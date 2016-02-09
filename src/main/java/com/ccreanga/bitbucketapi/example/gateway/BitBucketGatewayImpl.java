@@ -5,19 +5,24 @@ import com.ccreanga.bitbucket.rest.client.model.Project;
 import com.ccreanga.bitbucket.rest.client.model.pull.PullRequest;
 import com.ccreanga.bitbucket.rest.client.model.pull.PullRequestState;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Repository;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.Set;
 
 @Repository
-@Named("BitBucketGatewayImpl")
+@ComponentScan(basePackages = {"com.ccreanga.bitbucket.rest.client.http","com.ccreanga.bitbucketapi.example"})
 public class BitBucketGatewayImpl implements BitBucketGateway {
 
-    @Inject
-    ProjectClient projectClient;
+
+    private final ProjectClient projectClient;
+
+    @Autowired
+    public BitBucketGatewayImpl(ProjectClient projectClient) {
+        this.projectClient = projectClient;
+    }
 
     @Override
     @Cacheable(value="bitbucket")

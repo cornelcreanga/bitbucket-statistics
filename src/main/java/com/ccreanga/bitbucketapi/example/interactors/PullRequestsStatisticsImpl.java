@@ -7,6 +7,7 @@ import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivit
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivityActionType;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestCommentActivity;
 import com.ccreanga.bitbucketapi.example.gateway.BitBucketGateway;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -16,9 +17,13 @@ import java.util.stream.Collectors;
 @Service
 public class PullRequestsStatisticsImpl implements PullRequestsStatistics {
 
-    @Resource(name="BitBucketGatewayImpl")
-    private BitBucketGateway gateway;
 
+    private final BitBucketGateway gateway;
+
+    @Autowired
+    public PullRequestsStatisticsImpl(BitBucketGateway gateway) {
+        this.gateway = gateway;
+    }
 
     @Override
     public Map<User, List<Comment>> getUserComments(String projectKey, String repositorySlug, Date startDate, Date endDate) {

@@ -5,6 +5,7 @@ import com.ccreanga.bitbucket.rest.client.SshClient;
 import com.ccreanga.bitbucket.rest.client.http.BitBucketClientFactory;
 import com.ccreanga.bitbucket.rest.client.http.BitBucketCredentials;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.ehcache.EhCacheCacheManager;
 import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
@@ -15,19 +16,12 @@ import org.springframework.core.io.ClassPathResource;
 import java.net.URL;
 
 @Configuration
-@EnableMBeanExport
-@ComponentScan(basePackages = {"com.ccreanga.bitbucketapi.example"})
-
-@EnableAspectJAutoProxy
-@PropertySource("classpath:application.properties")
-//@PropertySource("classpath:${spring.profile}.properties")
+@ComponentScan
+@ConfigurationProperties(prefix = "bitbucket", ignoreUnknownFields = false)
 public class SpringContext {
 
-    @Value("${bitBucketUrl}")
     private String bitBucketUrl;
-    @Value("${bitBucketUser}")
     private String bitBucketUser;
-    @Value("${bitBucketPassword}")
     private String bitBucketPassword;
 
 
@@ -66,10 +60,20 @@ public class SpringContext {
         return cmfb;
     }
 
-
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
         return new PropertySourcesPlaceholderConfigurer();
     }
 
+    public void setBitBucketUrl(String bitBucketUrl) {
+        this.bitBucketUrl = bitBucketUrl;
+    }
+
+    public void setBitBucketPassword(String bitBucketPassword) {
+        this.bitBucketPassword = bitBucketPassword;
+    }
+
+    public void setBitBucketUser(String bitBucketUser) {
+        this.bitBucketUser = bitBucketUser;
+    }
 }

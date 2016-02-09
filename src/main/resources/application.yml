@@ -1,0 +1,4 @@
+bitbucket:
+  bitBucketUrl : http://localhost
+  bitBucketUser : root
+  bitBucketPassword : root
