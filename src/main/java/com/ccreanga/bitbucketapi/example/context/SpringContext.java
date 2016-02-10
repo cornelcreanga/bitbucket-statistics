@@ -28,7 +28,7 @@ public class SpringContext {
     @Bean(destroyMethod = "shutdown")
     BitBucketClientFactory getBitBucketClientFactory() {
         try {
-            return new BitBucketClientFactory(new URL(bitBucketUrl), new BitBucketCredentials(bitBucketUser, bitBucketPassword));
+            return new BitBucketClientFactory(bitBucketUrl, new BitBucketCredentials(bitBucketUser, bitBucketPassword));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
