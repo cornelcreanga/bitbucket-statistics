@@ -6,7 +6,9 @@ import com.ccreanga.bitbucket.rest.client.model.pull.PullRequest;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivity;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivityActionType;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestCommentActivity;
+import com.ccreanga.bitbucketapi.example.Utils;
 import com.ccreanga.bitbucketapi.example.gateway.BitBucketGateway;
+import com.google.common.base.Preconditions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +19,6 @@ import java.util.stream.Collectors;
 @Service
 public class PullRequestsStatisticsImpl implements PullRequestsStatistics {
 
-
     private final BitBucketGateway gateway;
 
     @Autowired
@@ -27,6 +28,7 @@ public class PullRequestsStatisticsImpl implements PullRequestsStatistics {
 
     @Override
     public Map<User, List<Comment>> getUserComments(String projectKey, String repositorySlug, Date startDate, Date endDate) {
+        Utils.checkDates(startDate,endDate);
         Set<PullRequest> pullRequests = gateway.getPullRequests(projectKey, repositorySlug);
         return pullRequests.stream().
                 filter(pr -> pr.getCreatedDate().after(startDate) && pr.getCreatedDate().before(endDate)).
@@ -45,15 +47,17 @@ public class PullRequestsStatisticsImpl implements PullRequestsStatistics {
 
     @Override
     public Map<Date, List<PullRequest>> getPullReqsGroupedByDay(String projectKey, String repositorySlug, Date startDate, Date endDate) {
+        Utils.checkDates(startDate,endDate);
         Set<PullRequest> pullRequests = gateway.getPullRequests(projectKey, repositorySlug);
 
         return pullRequests.stream().
                 filter(pr -> pr.getCreatedDate().after(startDate) && pr.getCreatedDate().before(endDate)).
-                collect(Collectors.groupingBy(pr -> truncate(pr.getCreatedDate())));
+                collect(Collectors.groupingBy(pr -> Utils.truncate(pr.getCreatedDate())));
     }
 
     @Override
     public Map<User, List<PullRequest>> getPullReqsGroupedByUsers(String projectKey, String repositorySlug, Date startDate, Date endDate) {
+        Utils.checkDates(startDate,endDate);
         Set<PullRequest> pullRequests = gateway.getPullRequests(projectKey, repositorySlug);
 
         return pullRequests.stream().
@@ -64,6 +68,7 @@ public class PullRequestsStatisticsImpl implements PullRequestsStatistics {
     @Override
     public Map<User, List<PullRequestActivity>> getPullReqsActivitiesGroupedByUsers(
             String projectKey, String repositorySlug, PullRequestActivityActionType activityType, Date startDate, Date endDate) {
+        Utils.checkDates(startDate,endDate);
         Set<PullRequest> pullRequests = gateway.getPullRequests(projectKey, repositorySlug);
 
         return pullRequests.stream().
@@ -85,15 +90,5 @@ public class PullRequestsStatisticsImpl implements PullRequestsStatistics {
         }
     }
 
-    private Date truncate(Date date) {
-        Calendar calendar = GregorianCalendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.MILLISECOND, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.HOUR, 0);
 
-        return calendar.getTime();
-
-    }
 }

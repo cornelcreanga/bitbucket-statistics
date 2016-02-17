@@ -2,17 +2,19 @@ package com.ccreanga.bitbucketapi.example.gateway;
 
 import com.ccreanga.bitbucket.rest.client.ProjectClient;
 import com.ccreanga.bitbucket.rest.client.model.Project;
+import com.ccreanga.bitbucket.rest.client.model.Repository;
 import com.ccreanga.bitbucket.rest.client.model.pull.PullRequest;
 import com.ccreanga.bitbucket.rest.client.model.pull.PullRequestState;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivity;
+import com.ccreanga.bitbucketapi.example.Wildcard;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.stereotype.Repository;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
-@Repository
+@org.springframework.stereotype.Repository
 @ComponentScan(basePackages = {"com.ccreanga.bitbucket.rest.client.http","com.ccreanga.bitbucketapi.example"})
 public class BitBucketGatewayImpl implements BitBucketGateway {
 
@@ -32,19 +34,22 @@ public class BitBucketGatewayImpl implements BitBucketGateway {
 
     @Override
     @Cacheable(value="bitbucket")
-    public Set<com.ccreanga.bitbucket.rest.client.model.Repository> getRepositories(String projectKey) {
+    public Set<Repository> getRepositories(String projectKey) {
         return projectClient.getProjectRepositories(projectKey);
     }
 
     @Override
     @Cacheable(value="bitbucket")
     public Set<PullRequest> getPullRequests(String projectKey, String repositorySlug) {
-        return projectClient.getPullRequests(projectKey, repositorySlug, PullRequestState.OPEN, true, null);
+        Set<Repository> repositories = projectClient.getProjectRepositories(projectKey);
+        return repositories.stream().
+                filter(r-> Wildcard.matches(repositorySlug,r.getSlug())).
+                flatMap(r->projectClient.getPullRequests(projectKey, r.getSlug(), PullRequestState.OPEN, true, null).stream()).
+                collect(Collectors.toSet());
     }
 
     @Override
     @Cacheable(value="bitbucket")
     public Set<PullRequestActivity> getPullRequestsActivities(String projectKey, String repositorySlug, Long pullRequestId) {
-        return projectClient.getPullRequestsActivities(projectKey, repositorySlug, pullRequestId);
-    }
+        return projectClient.getPullRequestsActivities(projectKey, repositorySlug, pullRequestId);    }
 }
