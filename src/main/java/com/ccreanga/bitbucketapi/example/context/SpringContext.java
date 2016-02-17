@@ -4,9 +4,9 @@ import com.ccreanga.bitbucket.rest.client.ProjectClient;
 import com.ccreanga.bitbucket.rest.client.SshClient;
 import com.ccreanga.bitbucket.rest.client.http.BitBucketClientFactory;
 import com.ccreanga.bitbucket.rest.client.http.BitBucketCredentials;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.ehcache.EhCacheCacheManager;
 import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
 import org.springframework.context.annotation.*;
@@ -18,6 +18,7 @@ import java.net.URL;
 @Configuration
 @ComponentScan
 @ConfigurationProperties(prefix = "bitbucket", ignoreUnknownFields = false)
+@EnableCaching
 public class SpringContext {
 
     private String bitBucketUrl;
