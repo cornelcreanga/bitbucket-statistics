@@ -40,11 +40,11 @@ public class BitBucketGatewayImpl implements BitBucketGateway {
 
     @Override
     @Cacheable(value="bitbucket")
-    public Set<PullRequest> getPullRequests(String projectKey, String repositorySlug) {
+    public Set<PullRequest> getPullRequests(String projectKey, String repositorySlug, PullRequestState pullRequestState) {
         Set<Repository> repositories = projectClient.getProjectRepositories(projectKey);
         return repositories.stream().
                 filter(r-> Wildcard.matches(repositorySlug,r.getSlug())).
-                flatMap(r->projectClient.getPullRequests(projectKey, r.getSlug(), PullRequestState.OPEN, true, null).stream()).
+                flatMap(r->projectClient.getPullRequests(projectKey, r.getSlug(), pullRequestState, true, null).stream()).
                 collect(Collectors.toSet());
     }
 

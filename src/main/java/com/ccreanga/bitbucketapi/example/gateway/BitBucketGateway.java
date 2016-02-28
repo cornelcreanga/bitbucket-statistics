@@ -3,6 +3,7 @@ package com.ccreanga.bitbucketapi.example.gateway;
 import com.ccreanga.bitbucket.rest.client.model.Project;
 import com.ccreanga.bitbucket.rest.client.model.Repository;
 import com.ccreanga.bitbucket.rest.client.model.pull.PullRequest;
+import com.ccreanga.bitbucket.rest.client.model.pull.PullRequestState;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivity;
 import org.springframework.context.annotation.ComponentScan;
 
@@ -31,7 +32,7 @@ public interface BitBucketGateway {
      * @param repositorySlug repository slug (can use wildcards *?^/()
      * @return set of pull requests
      */
-    Set<PullRequest> getPullRequests(String projectKey, String repositorySlug);
+    Set<PullRequest> getPullRequests(String projectKey, String repositorySlug, PullRequestState pullRequestState);
 
     /**
      * Get all the activities associated with a pull request id

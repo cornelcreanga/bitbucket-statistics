@@ -3,6 +3,7 @@ package com.ccreanga.bitbucketapi.example.interactors;
 import com.ccreanga.bitbucket.rest.client.model.Comment;
 import com.ccreanga.bitbucket.rest.client.model.User;
 import com.ccreanga.bitbucket.rest.client.model.pull.PullRequest;
+import com.ccreanga.bitbucket.rest.client.model.pull.PullRequestState;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivity;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivityActionType;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ public interface PullRequestsStatistics {
      * @param endDate - end date
      * @return - map of user/list of comments
      */
-    Map<User,List<Comment>> getUserComments(String projectKey, String repositorySlug, Date startDate, Date endDate);
+    Map<User,List<Comment>> getUserComments(String projectKey, String repositorySlug, PullRequestState pullRequestState, Date startDate, Date endDate);
 
     /**
      * Get a map of days/ list of pull requests per day
@@ -45,7 +46,7 @@ public interface PullRequestsStatistics {
      * @param endDate - end date
      * @return - map of user/list of pull requests/day
      */
-    Map<Date, List<PullRequest>> getPullReqsGroupedByDay(String projectKey, String repositorySlug, Date startDate, Date endDate);
+    Map<Date, List<PullRequest>> getPullReqsGroupedByDay(String projectKey, String repositorySlug, PullRequestState pullRequestState, Date startDate, Date endDate);
 
     /**
      * Get a map of users/ list of pull requests per user
@@ -55,7 +56,7 @@ public interface PullRequestsStatistics {
      * @param endDate - end date
      * @return - map of user/list of pull requests/user
      */
-    Map<User, List<PullRequest>> getPullReqsGroupedByUsers(String projectKey, String repositorySlug, Date startDate, Date endDate);
+    Map<User, List<PullRequest>> getPullReqsGroupedByUsers(String projectKey, String repositorySlug, PullRequestState pullRequestState, Date startDate, Date endDate);
 
     /**
      * Get a map of users/ list of pull requests activities (eg opening/declining/merge) per user
@@ -67,6 +68,6 @@ public interface PullRequestsStatistics {
      * @return - map of user/list of pull requests activities/user
      */
     Map<User, List<PullRequestActivity>> getPullReqsActivitiesGroupedByUsers(
-            String projectKey, String repositorySlug, PullRequestActivityActionType activityType, Date startDate, Date endDate);
+            String projectKey, String repositorySlug, PullRequestState pullRequestState, PullRequestActivityActionType activityType, Date startDate, Date endDate);
 
 }
