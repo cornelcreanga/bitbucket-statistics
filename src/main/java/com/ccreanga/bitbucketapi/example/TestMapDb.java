@@ -3,9 +3,9 @@ package com.ccreanga.bitbucketapi.example;
 import com.ccreanga.bitbucket.rest.client.model.User;
 import com.ccreanga.bitbucket.rest.client.model.UserType;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivity;
-import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestMergeActivity;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestOpenedActivity;
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -19,6 +19,8 @@ import java.util.concurrent.TimeUnit;
 
 public class TestMapDb {
 
+
+
     public static void main(String[] args) {
         DB db = DBMaker.newFileDB(new File("/tmp/testdb"))
                 .closeOnJvmShutdown()
@@ -29,7 +31,6 @@ public class TestMapDb {
         DB.HTreeMapMaker mapMaker = db.createHashMap("bitBucket");
         mapMaker.expireAfterWrite(2, TimeUnit.HOURS);
         HTreeMap<String,byte[]> map = mapMaker.makeOrGet();
-        System.out.println(map.get("cucu").length);
 
         Set<PullRequestActivity> activitySet = new HashSet<>();
         activitySet.add(new PullRequestOpenedActivity(21L,new Date(),new User(1,"name1","email1","display1",true,"slug", UserType.NORMAL)));
@@ -38,9 +39,14 @@ public class TestMapDb {
 
         Kryo kryo = new Kryo();
         Output output = new Output(4096);
-        kryo.writeObject(output,activitySet);
+        kryo.writeClassAndObject(output,activitySet);
         output.close();
-        System.out.println(output.total());
+        System.out.println(output.toBytes().length);
+
+        byte[] data = output.toBytes();
+        Input input = new Input(data);
+
+        Object o = kryo.readClassAndObject(input);
 
 
 

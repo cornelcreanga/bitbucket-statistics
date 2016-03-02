@@ -2,3 +2,7 @@ bitbucket:
   bitBucketUrl : http://localhost
   bitBucketUser : root
   bitBucketPassword : root
+cache:
+  path: /tmp/testdb
+  name: bitbucket
+  expiration: 7200

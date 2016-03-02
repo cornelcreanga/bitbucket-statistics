@@ -6,7 +6,10 @@ import com.ccreanga.bitbucket.rest.client.model.Repository;
 import com.ccreanga.bitbucket.rest.client.model.pull.PullRequest;
 import com.ccreanga.bitbucket.rest.client.model.pull.PullRequestState;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivity;
+import com.ccreanga.bitbucketapi.example.Utils;
 import com.ccreanga.bitbucketapi.example.Wildcard;
+import org.mapdb.DB;
+import org.mapdb.HTreeMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.ComponentScan;
@@ -16,8 +19,14 @@ import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Repository
 @ComponentScan(basePackages = {"com.ccreanga.bitbucket.rest.client.http","com.ccreanga.bitbucketapi.example"})
+@SuppressWarnings("unchecked")
 public class BitBucketGatewayImpl implements BitBucketGateway {
 
+    @Autowired
+    HTreeMap cache;
+
+    @Autowired
+    DB db;
 
     private final ProjectClient projectClient;
 
@@ -27,29 +36,58 @@ public class BitBucketGatewayImpl implements BitBucketGateway {
     }
 
     @Override
-    @Cacheable(value="bitbucket")
     public Set<Project> getProjects() {
-        return projectClient.getProjects();
+        byte[] projectsCached = (byte[]) cache.get("projects");
+        if (projectsCached!=null)
+            return (Set<Project>) Utils.deserialize(projectsCached);
+
+        Set<Project> projects = projectClient.getProjects();
+        cache.put("projects",Utils.serialize(projects));
+        db.commit();
+        return projects;
     }
 
     @Override
-    @Cacheable(value="bitbucket")
     public Set<Repository> getRepositories(String projectKey) {
-        return projectClient.getProjectRepositories(projectKey);
+        byte[] repos = (byte[]) cache.get("repos_"+projectKey);
+        if (repos!=null)
+            return (Set<Repository>) Utils.deserialize(repos);
+
+        Set<Repository> repositories = projectClient.getProjectRepositories(projectKey);
+        cache.put("repos_"+projectKey,Utils.serialize(repositories));
+        db.commit();
+        return repositories;
     }
 
     @Override
-    @Cacheable(value="bitbucket")
     public Set<PullRequest> getPullRequests(String projectKey, String repositorySlug, PullRequestState pullRequestState) {
+
+        byte[] pr = (byte[]) cache.get("pr_"+projectKey+"_"+repositorySlug+"_"+pullRequestState);
+        if (pr!=null)
+            return (Set<PullRequest>) Utils.deserialize(pr);
+
+
         Set<Repository> repositories = projectClient.getProjectRepositories(projectKey);
-        return repositories.stream().
+        Set<PullRequest> pullRequests = repositories.stream().
                 filter(r-> Wildcard.matches(repositorySlug,r.getSlug())).
                 flatMap(r->projectClient.getPullRequests(projectKey, r.getSlug(), pullRequestState, true, null).stream()).
                 collect(Collectors.toSet());
+        cache.put("pr_"+projectKey+"_"+repositorySlug+"_"+pullRequestState,pullRequests);
+        db.commit();
+        return pullRequests;
     }
 
     @Override
-    @Cacheable(value="bitbucket")
     public Set<PullRequestActivity> getPullRequestsActivities(String projectKey, String repositorySlug, Long pullRequestId) {
-        return projectClient.getPullRequestsActivities(projectKey, repositorySlug, pullRequestId);    }
+
+
+        byte[] pr = (byte[]) cache.get("pra_"+projectKey+"_"+repositorySlug+"_"+pullRequestId);
+        if (pr!=null)
+            return (Set<PullRequestActivity>) Utils.deserialize(pr);
+
+        Set<PullRequestActivity> pullRequestsActivities =projectClient.getPullRequestsActivities(projectKey, repositorySlug, pullRequestId);
+        cache.put("pra_"+projectKey+"_"+repositorySlug+"_"+pullRequestId,pullRequestsActivities);
+        db.commit();
+        return pullRequestsActivities;
+    }
 }

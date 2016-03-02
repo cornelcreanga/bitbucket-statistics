@@ -4,6 +4,9 @@ import com.ccreanga.bitbucket.rest.client.ProjectClient;
 import com.ccreanga.bitbucket.rest.client.SshClient;
 import com.ccreanga.bitbucket.rest.client.http.BitBucketClientFactory;
 import com.ccreanga.bitbucket.rest.client.http.BitBucketCredentials;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.HTreeMap;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -13,7 +16,9 @@ import org.springframework.context.annotation.*;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.io.ClassPathResource;
 
+import java.io.File;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 @ComponentScan
@@ -25,6 +30,9 @@ public class SpringContext {
     private String bitBucketUser;
     private String bitBucketPassword;
 
+    private String path;
+    private String name;
+    private int expiration;
 
     @Bean(destroyMethod = "shutdown")
     BitBucketClientFactory getBitBucketClientFactory() {
@@ -47,23 +55,38 @@ public class SpringContext {
         return getBitBucketClientFactory().getSshClient();
     }
 
-
     @Bean
-    public CacheManager cacheManager() {
-        return new EhCacheCacheManager(ehCacheCacheManager().getObject());
+    @DependsOn("cache")
+    HTreeMap<String,byte[]> cache(){
+        DB db = db();
+        DB.HTreeMapMaker mapMaker = db.createHashMap(name);
+        mapMaker.expireAfterWrite(expiration, TimeUnit.SECONDS);
+        return mapMaker.makeOrGet();
     }
 
     @Bean
-    public EhCacheManagerFactoryBean ehCacheCacheManager() {
-        EhCacheManagerFactoryBean cmfb = new EhCacheManagerFactoryBean();
-        cmfb.setConfigLocation(new ClassPathResource("ehcache.xml"));
-        cmfb.setShared(true);
-        return cmfb;
+    DB db(){
+        return DBMaker.newFileDB(new File(path))
+                .closeOnJvmShutdown()
+                .make();
     }
+
 
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
         return new PropertySourcesPlaceholderConfigurer();
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setExpiration(int expiration) {
+        this.expiration = expiration;
     }
 
     public void setBitBucketUrl(String bitBucketUrl) {
