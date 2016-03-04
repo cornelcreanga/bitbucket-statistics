@@ -1,8 +1,5 @@
 package com.ccreanga.bitbucketapi.example;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
 import com.google.common.base.Preconditions;
 
 import java.util.Calendar;
@@ -27,20 +24,5 @@ public class Utils {
         Preconditions.checkNotNull(endDate,"endDate is null");
         Preconditions.checkArgument(endDate.compareTo(startDate)>=0,"end date should be greater than start date");
     }
-
-    public static byte[] serialize(Object object){
-        Kryo kryo = new Kryo();
-        Output output = new Output(4096);
-        kryo.writeClassAndObject(output,object);
-        output.close();
-        return output.toBytes();
-    }
-
-    public static Object deserialize(byte[] data){
-        Kryo kryo = new Kryo();
-        return kryo.readClassAndObject(new Input(data));
-
-    }
-
 
 }

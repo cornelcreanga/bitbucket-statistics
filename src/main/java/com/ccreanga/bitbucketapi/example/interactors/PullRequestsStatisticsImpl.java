@@ -11,6 +11,7 @@ import com.ccreanga.bitbucketapi.example.Utils;
 import com.ccreanga.bitbucketapi.example.gateway.BitBucketGateway;
 import com.google.common.base.Preconditions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -23,7 +24,7 @@ public class PullRequestsStatisticsImpl implements PullRequestsStatistics {
     private final BitBucketGateway gateway;
 
     @Autowired
-    public PullRequestsStatisticsImpl(BitBucketGateway gateway) {
+    public PullRequestsStatisticsImpl(@Qualifier("localRepoGateway") BitBucketGateway gateway) {
         this.gateway = gateway;
     }
 

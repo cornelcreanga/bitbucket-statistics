@@ -1,8 +1,10 @@
-bitbucket:
+props:
   bitBucketUrl : http://localhost
   bitBucketUser : root
   bitBucketPassword : root
-cache:
-  path: /tmp/testdb
-  name: bitbucket
-  expiration: 7200
+
+  cachePath: /tmp/testdb
+  cacheName: bitbucket
+  cacheExpiration: 7200
+
+  repositoryPath: /home/corneliu/repository

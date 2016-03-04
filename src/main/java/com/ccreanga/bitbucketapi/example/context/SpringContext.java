@@ -4,25 +4,27 @@ import com.ccreanga.bitbucket.rest.client.ProjectClient;
 import com.ccreanga.bitbucket.rest.client.SshClient;
 import com.ccreanga.bitbucket.rest.client.http.BitBucketClientFactory;
 import com.ccreanga.bitbucket.rest.client.http.BitBucketCredentials;
+import com.ccreanga.bitbucket.rest.client.model.*;
+import com.ccreanga.bitbucket.rest.client.model.diff.*;
+import com.ccreanga.bitbucket.rest.client.model.pull.*;
+import com.ccreanga.bitbucket.rest.client.model.pull.activity.*;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.pool.KryoFactory;
+import com.esotericsoftware.kryo.pool.KryoPool;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.ehcache.EhCacheCacheManager;
-import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
 import org.springframework.context.annotation.*;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
-import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
 @ComponentScan
-@ConfigurationProperties(prefix = "bitbucket", ignoreUnknownFields = false)
+@ConfigurationProperties(prefix = "props", ignoreUnknownFields = false)
 @EnableCaching
 public class SpringContext {
 
@@ -30,9 +32,11 @@ public class SpringContext {
     private String bitBucketUser;
     private String bitBucketPassword;
 
-    private String path;
-    private String name;
-    private int expiration;
+    private String cachePath;
+    private String cacheName;
+    private int cacheExpiration;
+
+    private String repositoryPath;
 
     @Bean(destroyMethod = "shutdown")
     BitBucketClientFactory getBitBucketClientFactory() {
@@ -56,20 +60,77 @@ public class SpringContext {
     }
 
     @Bean
-    @DependsOn("cache")
+    @DependsOn("db")
     HTreeMap<String,byte[]> cache(){
         DB db = db();
-        DB.HTreeMapMaker mapMaker = db.createHashMap(name);
-        mapMaker.expireAfterWrite(expiration, TimeUnit.SECONDS);
+        DB.HTreeMapMaker mapMaker = db.createHashMap(cacheName);
+        mapMaker.expireAfterWrite(cacheExpiration, TimeUnit.SECONDS);
         return mapMaker.makeOrGet();
     }
 
-    @Bean
+    @Bean(destroyMethod = "close")
     DB db(){
-        return DBMaker.newFileDB(new File(path))
-                .closeOnJvmShutdown()
+        return DBMaker.newFileDB(new File(cachePath))
                 .make();
     }
+
+    @Bean
+    KryoPool getKryoPool(){
+        KryoFactory factory = () -> {
+            Kryo kryo = new Kryo();
+            kryo.register(PullRequestOpenedActivity.class);
+            kryo.register(ConflictMarker.class);
+            kryo.register(Diff.class);
+            kryo.register(DiffHunk.class);
+            kryo.register(DiffLine.class);
+            kryo.register(DiffSegment.class);
+            kryo.register(DiffSegmentType.class);
+            kryo.register(PullRequestActivity.class);
+            kryo.register(PullRequestActivityActionType.class);
+            kryo.register(PullRequestApprovedActivity.class);
+            kryo.register(PullRequestCommentActivity.class);
+            kryo.register(PullRequestDeclinedActivity.class);
+            kryo.register(PullRequestMergedActivity.class);
+            kryo.register(PullRequestOpenedActivity.class);
+            kryo.register(PullRequestReOpenedActivity.class);
+            kryo.register(PullRequestRescopedActivity.class);
+            kryo.register(PullRequestUnapprovedActivity.class);
+            kryo.register(PullRequest.class);
+            kryo.register(PullRequestBranch.class);
+            kryo.register(PullRequestChange.class);
+            kryo.register(PullRequestParticipant.class);
+            kryo.register(PullRequestRole.class);
+            kryo.register(PullRequestState.class);
+            kryo.register(Branch.class);
+            kryo.register(Comment.class);
+            kryo.register(CommentAnchor.class);
+            kryo.register(Commit.class);
+            kryo.register(FileChangeType.class);
+            kryo.register(FileType.class);
+            kryo.register(LineType.class);
+            kryo.register(Link.class);
+            kryo.register(MinimalCommit.class);
+            kryo.register(NodeType.class);
+            kryo.register(Page.class);
+            kryo.register(Path.class);
+            kryo.register(PermittedOperations.class);
+            kryo.register(Project.class);
+            kryo.register(ProjectType.class);
+            kryo.register(Repository.class);
+            kryo.register(RepositorySshKey.class);
+            kryo.register(RepositoryState.class);
+            kryo.register(SshKey.class);
+            kryo.register(Task.class);
+            kryo.register(TaskOperations.class);
+            kryo.register(TaskState.class);
+            kryo.register(User.class);
+            kryo.register(UserSshKey.class);
+            kryo.register(UserType.class);
+            return kryo;
+        };
+        return new KryoPool.Builder(factory).build();
+    }
+
 
 
     @Bean
@@ -77,16 +138,16 @@ public class SpringContext {
         return new PropertySourcesPlaceholderConfigurer();
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setCachePath(String cachePath) {
+        this.cachePath = cachePath;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setCacheName(String cacheName) {
+        this.cacheName = cacheName;
     }
 
-    public void setExpiration(int expiration) {
-        this.expiration = expiration;
+    public void setCacheExpiration(int cacheExpiration) {
+        this.cacheExpiration = cacheExpiration;
     }
 
     public void setBitBucketUrl(String bitBucketUrl) {
@@ -99,5 +160,13 @@ public class SpringContext {
 
     public void setBitBucketUser(String bitBucketUser) {
         this.bitBucketUser = bitBucketUser;
+    }
+
+    public void setRepositoryPath(String repositoryPath) {
+        this.repositoryPath = repositoryPath;
+    }
+
+    public String getRepositoryPath() {
+        return repositoryPath;
     }
 }
