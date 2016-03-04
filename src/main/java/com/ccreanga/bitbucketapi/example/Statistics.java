@@ -30,7 +30,7 @@ public class Statistics {
     PullRequestsStatistics pullRequestsStatistics;
 
     @Autowired
-    @Qualifier("localRepoGateway")
+    @Qualifier("bitBucketGateway")
     BitBucketGateway bitBucketGateway;
 
     public PullRequestsStatistics getPullRequestsStatistics() {
