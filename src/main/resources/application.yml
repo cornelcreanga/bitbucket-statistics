@@ -7,4 +7,4 @@ props:
   cacheName: bitbucket
   cacheExpiration: 7200
 
-  repositoryPath: /home/corneliu/repository
+  repositoryPath: /home/cornel/prAct

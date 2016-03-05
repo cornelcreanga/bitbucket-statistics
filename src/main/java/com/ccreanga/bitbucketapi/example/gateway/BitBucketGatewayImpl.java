@@ -6,15 +6,11 @@ import com.ccreanga.bitbucket.rest.client.model.Repository;
 import com.ccreanga.bitbucket.rest.client.model.pull.PullRequest;
 import com.ccreanga.bitbucket.rest.client.model.pull.PullRequestState;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivity;
-import com.ccreanga.bitbucketapi.example.Serializer;
-import com.ccreanga.bitbucketapi.example.Utils;
+import com.ccreanga.bitbucketapi.example.cache.Cache;
+import com.ccreanga.bitbucketapi.example.serializers.Serializer;
 import com.ccreanga.bitbucketapi.example.Wildcard;
-import org.mapdb.DB;
-import org.mapdb.HTreeMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
@@ -25,25 +21,17 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unchecked")
 public class BitBucketGatewayImpl implements BitBucketGateway {
 
-    @Autowired
-    HTreeMap cache;
+    private Cache cache;
 
-    @Autowired
-    DB db;
-
-    Serializer serializer;
+    private Serializer serializer;
 
     private final ProjectClient projectClient;
 
     @Autowired
-    @Qualifier("defaultSerializer")
-    public void setSerializer(Serializer serializer) {
-        this.serializer = serializer;
-    }
-
-    @Autowired
-    public BitBucketGatewayImpl(ProjectClient projectClient) {
+    public BitBucketGatewayImpl(ProjectClient projectClient,@Qualifier("defaultSerializer") Serializer serializer,Cache cache) {
         this.projectClient = projectClient;
+        this.serializer = serializer;
+        this.cache = cache;
     }
 
     @Override
@@ -53,8 +41,7 @@ public class BitBucketGatewayImpl implements BitBucketGateway {
             return (Set<Project>) serializer.deserialize(projectsCached);
 
         Set<Project> projects = projectClient.getProjects();
-        cache.put("projects",serializer.serialize(projects));
-        db.commit();
+        cache.putAndCommit("projects",serializer.serialize(projects));
         return projects;
     }
 
@@ -65,8 +52,7 @@ public class BitBucketGatewayImpl implements BitBucketGateway {
             return (Set<Repository>) serializer.deserialize(repos);
 
         Set<Repository> repositories = projectClient.getProjectRepositories(projectKey);
-        cache.put("repos_"+projectKey,serializer.serialize(repositories));
-        db.commit();
+        cache.putAndCommit("repos_"+projectKey,serializer.serialize(repositories));
         return repositories;
     }
 
@@ -83,8 +69,7 @@ public class BitBucketGatewayImpl implements BitBucketGateway {
                 flatMap(r->projectClient.getPullRequests(projectKey, r.getSlug(), pullRequestState, true, null).stream()).
                 collect(Collectors.toSet());
 
-        cache.put("pr_"+projectKey+"_"+repositorySlug+"_"+pullRequestState,pullRequests);
-        db.commit();
+        cache.putAndCommit("pr_"+projectKey+"_"+repositorySlug+"_"+pullRequestState,pullRequests);
         return pullRequests;
     }
 
@@ -98,8 +83,7 @@ public class BitBucketGatewayImpl implements BitBucketGateway {
 
         Set<PullRequestActivity> pullRequestsActivities =projectClient.getPullRequestsActivities(projectKey, repositorySlug, pullRequestId);
 
-        cache.put("pra_"+projectKey+"_"+repositorySlug+"_"+pullRequestId,pullRequestsActivities);
-        db.commit();
+        cache.putAndCommit("pra_"+projectKey+"_"+repositorySlug+"_"+pullRequestId,pullRequestsActivities);
         return pullRequestsActivities;
     }
 }

@@ -7,6 +7,7 @@ import com.ccreanga.bitbucket.rest.client.model.pull.PullRequestState;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivity;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivityActionType;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestCommentActivity;
+import com.ccreanga.bitbucketapi.example.Interval;
 import com.ccreanga.bitbucketapi.example.Utils;
 import com.ccreanga.bitbucketapi.example.gateway.BitBucketGateway;
 import com.google.common.base.Preconditions;
@@ -24,16 +25,16 @@ public class PullRequestsStatisticsImpl implements PullRequestsStatistics {
     private final BitBucketGateway gateway;
 
     @Autowired
-    public PullRequestsStatisticsImpl(@Qualifier("bitBucketGateway") BitBucketGateway gateway) {
+    public PullRequestsStatisticsImpl(@Qualifier("localRepoGateway") BitBucketGateway gateway) {
         this.gateway = gateway;
     }
 
     @Override
-    public Map<User, List<Comment>> getUserComments(String projectKey, String repositorySlug, PullRequestState pullRequestState, Date startDate, Date endDate) {
-        Utils.checkDates(startDate,endDate);
+    public Map<User, List<Comment>> getUserComments(String projectKey, String repositorySlug, PullRequestState pullRequestState, Interval interval) {
+
         Set<PullRequest> pullRequests = gateway.getPullRequests(projectKey, repositorySlug, pullRequestState);
         return pullRequests.stream().
-                filter(pr -> pr.getCreatedDate().after(startDate) && pr.getCreatedDate().before(endDate)).
+                filter(pr -> pr.createdBetween(interval.getStartDate(),interval.getEndDate())).
                 flatMap(pr->gateway.getPullRequestsActivities(projectKey,repositorySlug,pr.getId()).
                         stream().
                         filter(PullRequestActivity::isComment).
@@ -48,33 +49,30 @@ public class PullRequestsStatisticsImpl implements PullRequestsStatistics {
     }
 
     @Override
-    public Map<Date, List<PullRequest>> getPullReqsGroupedByDay(String projectKey, String repositorySlug,PullRequestState pullRequestState, Date startDate, Date endDate) {
-        Utils.checkDates(startDate,endDate);
+    public Map<Date, List<PullRequest>> getPullReqsByDay(String projectKey, String repositorySlug,PullRequestState pullRequestState, Interval interval) {
         Set<PullRequest> pullRequests = gateway.getPullRequests(projectKey, repositorySlug, pullRequestState);
 
         return pullRequests.stream().
-                filter(pr -> pr.getCreatedDate().after(startDate) && pr.getCreatedDate().before(endDate)).
+                filter(pr -> pr.createdBetween(interval.getStartDate(),interval.getEndDate())).
                 collect(Collectors.groupingBy(pr -> Utils.truncate(pr.getCreatedDate())));
     }
 
     @Override
-    public Map<User, List<PullRequest>> getPullReqsGroupedByUsers(String projectKey, String repositorySlug,PullRequestState pullRequestState, Date startDate, Date endDate) {
-        Utils.checkDates(startDate,endDate);
+    public Map<User, List<PullRequest>> getPullReqsByUsers(String projectKey, String repositorySlug,PullRequestState pullRequestState, Interval interval) {
         Set<PullRequest> pullRequests = gateway.getPullRequests(projectKey, repositorySlug, pullRequestState);
 
         return pullRequests.stream().
-                filter(pr -> pr.getCreatedDate().after(startDate) && pr.getCreatedDate().before(endDate)).
+                filter(pr -> pr.createdBetween(interval.getStartDate(),interval.getEndDate())).
                 collect(Collectors.groupingBy(pr -> pr.getAuthor().getUser()));
     }
 
     @Override
-    public Map<User, List<PullRequestActivity>> getPullReqsActivitiesGroupedByUsers(
-            String projectKey, String repositorySlug,PullRequestState pullRequestState, PullRequestActivityActionType activityType, Date startDate, Date endDate) {
-        Utils.checkDates(startDate,endDate);
+    public Map<User, List<PullRequestActivity>> getPullReqsActivitiesByUsers(
+            String projectKey, String repositorySlug,PullRequestState pullRequestState, PullRequestActivityActionType activityType, Interval interval) {
         Set<PullRequest> pullRequests = gateway.getPullRequests(projectKey, repositorySlug,pullRequestState);
 
         return pullRequests.stream().
-                filter(pr -> pr.getCreatedDate().after(startDate) && pr.getCreatedDate().before(endDate)).
+                filter(pr -> pr.createdBetween(interval.getStartDate(),interval.getEndDate())).
                 flatMap(pr -> gateway.getPullRequestsActivities(projectKey, repositorySlug, pr.getId()).
                         stream().
                         filter(act->act.getActionType().equals(activityType))).

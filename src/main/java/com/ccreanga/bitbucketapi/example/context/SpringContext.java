@@ -8,6 +8,12 @@ import com.ccreanga.bitbucket.rest.client.model.*;
 import com.ccreanga.bitbucket.rest.client.model.diff.*;
 import com.ccreanga.bitbucket.rest.client.model.pull.*;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.*;
+import com.ccreanga.bitbucketapi.example.serializers.kryo.ImmutableListSerializer;
+import com.ccreanga.bitbucketapi.example.serializers.kryo.ImmutableMapSerializer;
+import com.ccreanga.bitbucketapi.example.serializers.kryo.ImmutableMultimapSerializer;
+import com.ccreanga.bitbucketapi.example.serializers.kryo.ImmutableSetSerializer;
+import com.ccreanga.bitbucketapi.example.cache.Cache;
+import com.ccreanga.bitbucketapi.example.cache.MapDbCache;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.pool.KryoFactory;
 import com.esotericsoftware.kryo.pool.KryoPool;
@@ -57,6 +63,11 @@ public class SpringContext {
     @DependsOn("getBitBucketClientFactory")
     public SshClient getSshClient() {
         return getBitBucketClientFactory().getSshClient();
+    }
+
+    @Bean(destroyMethod = "close")
+    public Cache<String,byte[]> getShortLivedCache(){
+        return new MapDbCache<>(cachePath,cacheName,cacheExpiration);
     }
 
     @Bean
@@ -126,6 +137,11 @@ public class SpringContext {
             kryo.register(User.class);
             kryo.register(UserSshKey.class);
             kryo.register(UserType.class);
+            ImmutableListSerializer.registerSerializers( kryo );
+            ImmutableSetSerializer.registerSerializers( kryo );
+            ImmutableMapSerializer.registerSerializers( kryo );
+            ImmutableMultimapSerializer.registerSerializers( kryo );
+
             return kryo;
         };
         return new KryoPool.Builder(factory).build();

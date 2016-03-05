@@ -1,10 +1,10 @@
 package com.ccreanga.bitbucketapi.example;
 
+import com.ccreanga.bitbucket.rest.client.model.User;
+import com.ccreanga.bitbucket.rest.client.model.pull.PullRequest;
 import com.google.common.base.Preconditions;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.*;
 
 public class Utils {
 
@@ -24,5 +24,19 @@ public class Utils {
         Preconditions.checkNotNull(endDate,"endDate is null");
         Preconditions.checkArgument(endDate.compareTo(startDate)>=0,"end date should be greater than start date");
     }
+
+    private static void mergeMaps(Map<User, List<Object>> firstMap, Map<User, List<Object>> secondMap){
+        Set<User> users = secondMap.keySet();
+        for (User next : users) {
+            List<Object> values = firstMap.get(next);
+            if (values == null)
+                firstMap.put(next, secondMap.get(next));
+            else {
+                values.addAll(secondMap.get(next));
+                firstMap.put(next, values);
+            }
+        }
+    }
+
 
 }

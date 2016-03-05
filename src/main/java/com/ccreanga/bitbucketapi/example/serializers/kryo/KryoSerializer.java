@@ -1,5 +1,6 @@
-package com.ccreanga.bitbucketapi.example;
+package com.ccreanga.bitbucketapi.example.serializers.kryo;
 
+import com.ccreanga.bitbucketapi.example.serializers.Serializer;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;

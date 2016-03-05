@@ -6,6 +6,7 @@ import com.ccreanga.bitbucket.rest.client.model.pull.PullRequest;
 import com.ccreanga.bitbucket.rest.client.model.pull.PullRequestState;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivity;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivityActionType;
+import com.ccreanga.bitbucketapi.example.Interval;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -32,42 +33,35 @@ public interface PullRequestsStatistics {
      * Get a map containing all the users/all the comments related to pull request activities
      * @param projectKey - project key
      * @param repositorySlug - repository. also accepts wildcards *?^()\
-     * @param startDate - start date
-     * @param endDate - end date
+     * @param interval - time interval
      * @return - map of user/list of comments
      */
-    Map<User,List<Comment>> getUserComments(String projectKey, String repositorySlug, PullRequestState pullRequestState, Date startDate, Date endDate);
+    Map<User,List<Comment>> getUserComments(String projectKey, String repositorySlug, PullRequestState pullRequestState, Interval interval);
 
     /**
      * Get a map of days/ list of pull requests per day
      * @param projectKey - project key
      * @param repositorySlug - repository. also accepts wildcards *?^()\
-     * @param startDate - start date
-     * @param endDate - end date
-     * @return - map of user/list of pull requests/day
+     * @param interval - time interval     * @return - map of user/list of pull requests/day
      */
-    Map<Date, List<PullRequest>> getPullReqsGroupedByDay(String projectKey, String repositorySlug, PullRequestState pullRequestState, Date startDate, Date endDate);
+    Map<Date, List<PullRequest>> getPullReqsByDay(String projectKey, String repositorySlug, PullRequestState pullRequestState, Interval interval);
 
     /**
-     * Get a map of users/ list of pull requests per user
+     * Get a map of users/ list of pull requests created by user and having the pull request state {@code pullRequestState}
      * @param projectKey - project key
      * @param repositorySlug - repository. also accepts wildcards *?^()\
-     * @param startDate - start date
-     * @param endDate - end date
-     * @return - map of user/list of pull requests/user
+     * @param interval - time interval     * @return - map of user/list of pull requests/user
      */
-    Map<User, List<PullRequest>> getPullReqsGroupedByUsers(String projectKey, String repositorySlug, PullRequestState pullRequestState, Date startDate, Date endDate);
+    Map<User, List<PullRequest>> getPullReqsByUsers(String projectKey, String repositorySlug, PullRequestState pullRequestState, Interval interval);
 
     /**
      * Get a map of users/ list of pull requests activities (eg opening/declining/merge) per user
      * @param projectKey - project key
      * @param repositorySlug - repository. also accepts wildcards *?^()\
      * @param activityType - activity type (one of )
-     * @param startDate - start date
-     * @param endDate - end date
-     * @return - map of user/list of pull requests activities/user
+     * @param interval - time interval     * @return - map of user/list of pull requests activities/user
      */
-    Map<User, List<PullRequestActivity>> getPullReqsActivitiesGroupedByUsers(
-            String projectKey, String repositorySlug, PullRequestState pullRequestState, PullRequestActivityActionType activityType, Date startDate, Date endDate);
+    Map<User, List<PullRequestActivity>> getPullReqsActivitiesByUsers(
+            String projectKey, String repositorySlug, PullRequestState pullRequestState, PullRequestActivityActionType activityType, Interval interval);
 
 }

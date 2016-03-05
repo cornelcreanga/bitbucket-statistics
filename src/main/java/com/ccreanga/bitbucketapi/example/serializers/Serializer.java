@@ -1,9 +1,5 @@
-package com.ccreanga.bitbucketapi.example;
+package com.ccreanga.bitbucketapi.example.serializers;
 
-
-import org.springframework.stereotype.Component;
-
-@Component
 public interface Serializer {
 
     byte[] serialize(Object object);
