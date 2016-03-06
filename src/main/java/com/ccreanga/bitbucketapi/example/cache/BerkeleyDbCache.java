@@ -7,6 +7,7 @@ import java.io.File;
 
 public class BerkeleyDbCache implements Cache {
 
+    private Environment environment;
     private Database database;
 
     public BerkeleyDbCache(String cachePath, String cacheName) {
@@ -15,12 +16,11 @@ public class BerkeleyDbCache implements Cache {
             throw new RuntimeException(cachePath+" should be an existing folder");
         EnvironmentConfig envConfig = new EnvironmentConfig();
         envConfig.setAllowCreate(true);
-        Environment myDbEnvironment = null;
         try {
-            myDbEnvironment = new Environment(new File(cachePath), envConfig);
+            environment = new Environment(new File(cachePath), envConfig);
             DatabaseConfig dbConfig = new DatabaseConfig();
             dbConfig.setAllowCreate(true);
-            database = myDbEnvironment.openDatabase(null, cacheName, dbConfig);
+            database = environment.openDatabase(null, cacheName, dbConfig);
         } catch (DatabaseException e) {
             throw new RuntimeException(e);
         }
@@ -136,7 +136,12 @@ public class BerkeleyDbCache implements Cache {
 
     @Override
     public void close() {
-
+        try {
+            database.close();
+            environment.close();
+        } catch (DatabaseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

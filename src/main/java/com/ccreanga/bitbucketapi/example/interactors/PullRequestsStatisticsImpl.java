@@ -73,7 +73,7 @@ public class PullRequestsStatisticsImpl implements PullRequestsStatistics {
 
         return pullRequests.stream().
                 filter(pr -> pr.createdBetween(interval.getStartDate(),interval.getEndDate())).
-                flatMap(pr -> gateway.getPullRequestsActivities(projectKey, repositorySlug, pr.getId()).
+                flatMap(pr -> gateway.getPullRequestsActivities(projectKey, pr.fromRepository(), pr.getId()).
                         stream().
                         filter(act->act.getActionType().equals(activityType))).
                 collect(Collectors.toSet()).

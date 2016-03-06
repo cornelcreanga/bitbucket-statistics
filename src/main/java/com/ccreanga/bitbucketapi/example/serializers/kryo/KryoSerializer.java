@@ -16,7 +16,7 @@ public class KryoSerializer implements Serializer {
 
     public byte[] serialize(Object object){
         Kryo kryo = kryoPool.borrow();
-        Output output = new Output(32*1024);
+        Output output = new Output(64*1024,-1);
         kryo.writeClassAndObject(output,object);
         output.close();
         kryoPool.release(kryo);
