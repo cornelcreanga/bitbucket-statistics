@@ -7,8 +7,8 @@ import com.ccreanga.bitbucket.rest.client.model.UserType;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestActivity;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestOpenedActivity;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.PullRequestRescopedActivity;
+import com.ccreanga.bitbucketapi.example.cache.BerkeleyDbCache;
 import com.ccreanga.bitbucketapi.example.cache.Cache;
-import com.ccreanga.bitbucketapi.example.cache.MapDbCache;
 import com.ccreanga.bitbucketapi.example.serializers.jdefault.JavaDefaultSerializer;
 import com.ccreanga.bitbucketapi.example.serializers.kryo.ImmutableListSerializer;
 import com.ccreanga.bitbucketapi.example.serializers.kryo.ImmutableMapSerializer;
@@ -17,9 +17,6 @@ import com.ccreanga.bitbucketapi.example.serializers.kryo.ImmutableSetSerializer
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.HTreeMap;
 
 import java.io.File;
 import java.util.*;
@@ -29,16 +26,7 @@ public class TestMapDb {
 
 
 
-    public static void main(String[] args) {
-        DB db = DBMaker.newFileDB(new File("/tmp/testdb"))
-                .closeOnJvmShutdown()
-                .make();
-
-
-
-        DB.HTreeMapMaker mapMaker = db.createHashMap("bitBucket");
-        mapMaker.expireAfterWrite(2, TimeUnit.HOURS);
-        HTreeMap<String,byte[]> map = mapMaker.makeOrGet();
+    public static void main(String[] args) throws InterruptedException {
 
         Set<PullRequestActivity> activitySet = new HashSet<>();
         activitySet.add(new PullRequestOpenedActivity(21L,new Date(),new User(1,"name1","email1","display1",true,"slug", UserType.NORMAL),1));
@@ -93,21 +81,16 @@ public class TestMapDb {
 
         data = output.toBytes();
 
-        Cache<String,byte[]> cache = new MapDbCache<>("/tmp/tmp/db","tmp",1000);
-        for (int i = 0; i <10000 ; i++) {
-            cache.put("i"+i,data);
-        }
-        cache.commit();
+        Cache cache = new BerkeleyDbCache("/tmp/dbEnv","cache");
+        cache.put("key",new byte[]{2,2,2},1);
 
-        Input input = new Input(data);
+        byte[] v = cache.get("key");
+        System.out.println(cache.get("key").length);
+        cache.remove("key");
+        //Thread.sleep(1000);
 
-        Object o = kryo.readClassAndObject(input);
-
-
-
-        map.put("cucu",output.toBytes());
-        db.commit();
-        db.close();
+        System.out.println(cache.get("key"));
+        cache.remove("key");
     }
 
 }

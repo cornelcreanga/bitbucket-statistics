@@ -8,18 +8,15 @@ import com.ccreanga.bitbucket.rest.client.model.*;
 import com.ccreanga.bitbucket.rest.client.model.diff.*;
 import com.ccreanga.bitbucket.rest.client.model.pull.*;
 import com.ccreanga.bitbucket.rest.client.model.pull.activity.*;
+import com.ccreanga.bitbucketapi.example.cache.BerkeleyDbCache;
 import com.ccreanga.bitbucketapi.example.serializers.kryo.ImmutableListSerializer;
 import com.ccreanga.bitbucketapi.example.serializers.kryo.ImmutableMapSerializer;
 import com.ccreanga.bitbucketapi.example.serializers.kryo.ImmutableMultimapSerializer;
 import com.ccreanga.bitbucketapi.example.serializers.kryo.ImmutableSetSerializer;
 import com.ccreanga.bitbucketapi.example.cache.Cache;
-import com.ccreanga.bitbucketapi.example.cache.MapDbCache;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.pool.KryoFactory;
 import com.esotericsoftware.kryo.pool.KryoPool;
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.HTreeMap;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.*;
@@ -40,7 +37,6 @@ public class SpringContext {
 
     private String cachePath;
     private String cacheName;
-    private int cacheExpiration;
 
     private String repositoryPath;
 
@@ -66,23 +62,8 @@ public class SpringContext {
     }
 
     @Bean(destroyMethod = "close")
-    public Cache<String,byte[]> getShortLivedCache(){
-        return new MapDbCache<>(cachePath,cacheName,cacheExpiration);
-    }
-
-    @Bean
-    @DependsOn("db")
-    HTreeMap<String,byte[]> cache(){
-        DB db = db();
-        DB.HTreeMapMaker mapMaker = db.createHashMap(cacheName);
-        mapMaker.expireAfterWrite(cacheExpiration, TimeUnit.SECONDS);
-        return mapMaker.makeOrGet();
-    }
-
-    @Bean(destroyMethod = "close")
-    DB db(){
-        return DBMaker.newFileDB(new File(cachePath))
-                .make();
+    public Cache getCache(){
+        return new BerkeleyDbCache(cachePath,cacheName);
     }
 
     @Bean
@@ -160,10 +141,6 @@ public class SpringContext {
 
     public void setCacheName(String cacheName) {
         this.cacheName = cacheName;
-    }
-
-    public void setCacheExpiration(int cacheExpiration) {
-        this.cacheExpiration = cacheExpiration;
     }
 
     public void setBitBucketUrl(String bitBucketUrl) {

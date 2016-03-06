@@ -1,23 +1,19 @@
 package com.ccreanga.bitbucketapi.example.cache;
 
 
-public interface Cache<K, V> {
+public interface Cache {
 
-    void put(K key, V value);
+    void put(String key, byte[] value,int expiration);
 
-    void putAndCommit(K key, V value);
+    byte[] get(String key);
 
-    V get(K key);
+    boolean containsKey(String key);
 
-    boolean containsKey(K key);
-
-    V remove(K key);
-
-    V removeAndCommit(K key, V value);
+    void remove(String key);
 
     boolean isEmpty();
 
-    int size();
+    long size();
 
     void clear();
 

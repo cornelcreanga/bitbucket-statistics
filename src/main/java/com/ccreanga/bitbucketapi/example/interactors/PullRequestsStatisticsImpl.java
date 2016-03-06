@@ -25,7 +25,7 @@ public class PullRequestsStatisticsImpl implements PullRequestsStatistics {
     private final BitBucketGateway gateway;
 
     @Autowired
-    public PullRequestsStatisticsImpl(@Qualifier("localRepoGateway") BitBucketGateway gateway) {
+    public PullRequestsStatisticsImpl(@Qualifier("bitBucketGateway") BitBucketGateway gateway) {
         this.gateway = gateway;
     }
 

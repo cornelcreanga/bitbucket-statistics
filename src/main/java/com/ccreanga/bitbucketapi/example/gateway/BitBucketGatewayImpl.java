@@ -28,7 +28,7 @@ public class BitBucketGatewayImpl implements BitBucketGateway {
     private final ProjectClient projectClient;
 
     @Autowired
-    public BitBucketGatewayImpl(ProjectClient projectClient,@Qualifier("defaultSerializer") Serializer serializer,Cache cache) {
+    public BitBucketGatewayImpl(ProjectClient projectClient,@Qualifier("kryoSerializer") Serializer serializer,Cache cache) {
         this.projectClient = projectClient;
         this.serializer = serializer;
         this.cache = cache;
@@ -36,40 +36,40 @@ public class BitBucketGatewayImpl implements BitBucketGateway {
 
     @Override
     public Set<Project> getProjects() {
-        byte[] projectsCached = (byte[]) cache.get("projects");
+        byte[] projectsCached = cache.get("projects");
         if (projectsCached!=null)
             return (Set<Project>) serializer.deserialize(projectsCached);
 
         Set<Project> projects = projectClient.getProjects();
-        cache.putAndCommit("projects",serializer.serialize(projects));
+        cache.put("projects",serializer.serialize(projects),24*3600);
         return projects;
     }
 
     @Override
     public Set<Repository> getRepositories(String projectKey) {
-        byte[] repos = (byte[]) cache.get("repos_"+projectKey);
+        byte[] repos = cache.get("repos_"+projectKey);
         if (repos!=null)
             return (Set<Repository>) serializer.deserialize(repos);
 
         Set<Repository> repositories = projectClient.getProjectRepositories(projectKey);
-        cache.putAndCommit("repos_"+projectKey,serializer.serialize(repositories));
+        cache.put("repos_"+projectKey,serializer.serialize(repositories),24*3600);
         return repositories;
     }
 
     @Override
     public Set<PullRequest> getPullRequests(String projectKey, String repositorySlug, PullRequestState pullRequestState) {
 
-        byte[] pr = (byte[]) cache.get("pr_"+projectKey+"_"+repositorySlug+"_"+pullRequestState);
+        byte[] pr = cache.get("pr_"+projectKey+"_"+repositorySlug+"_"+pullRequestState);
         if (pr!=null)
             return (Set<PullRequest>) serializer.deserialize(pr);
 
         Set<Repository> repositories = projectClient.getProjectRepositories(projectKey);
         Set<PullRequest> pullRequests = repositories.stream().
-                filter(r-> Wildcard.matches(repositorySlug,r.getSlug())).
+                filter(r-> Wildcard.matches(r.getSlug(),repositorySlug)).
                 flatMap(r->projectClient.getPullRequests(projectKey, r.getSlug(), pullRequestState, true, null).stream()).
                 collect(Collectors.toSet());
 
-        cache.putAndCommit("pr_"+projectKey+"_"+repositorySlug+"_"+pullRequestState,pullRequests);
+        cache.put("pr_"+projectKey+"_"+repositorySlug+"_"+pullRequestState,serializer.serialize(pullRequests),3600);
         return pullRequests;
     }
 
@@ -77,13 +77,13 @@ public class BitBucketGatewayImpl implements BitBucketGateway {
     public Set<PullRequestActivity> getPullRequestsActivities(String projectKey, String repositorySlug, Long pullRequestId) {
 
 
-        byte[] pr = (byte[]) cache.get("pra_"+projectKey+"_"+repositorySlug+"_"+pullRequestId);
+        byte[] pr = cache.get("pra_"+projectKey+"_"+repositorySlug+"_"+pullRequestId);
         if (pr!=null)
             return (Set<PullRequestActivity>) serializer.deserialize(pr);
 
         Set<PullRequestActivity> pullRequestsActivities =projectClient.getPullRequestsActivities(projectKey, repositorySlug, pullRequestId);
 
-        cache.putAndCommit("pra_"+projectKey+"_"+repositorySlug+"_"+pullRequestId,pullRequestsActivities);
+        cache.put("pra_"+projectKey+"_"+repositorySlug+"_"+pullRequestId,serializer.serialize(pullRequestsActivities),3600);
         return pullRequestsActivities;
     }
 }
