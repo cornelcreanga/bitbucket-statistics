@@ -29,7 +29,6 @@ public class BerkeleyDbCache implements Cache {
 
     @Override
     public void put(String key, byte[] value, int expiration) {
-
         //first 8 bytes are the expiration timestamp
         byte[] data = new byte[value.length+8];
         System.arraycopy(Longs.toByteArray(System.currentTimeMillis()+expiration*1000),0,data,0,8);
@@ -47,6 +46,7 @@ public class BerkeleyDbCache implements Cache {
 
     private byte[] parseKeyAndRemoveExpired(String key,DatabaseEntry value){
         byte[] r = value.getData();
+        //first 8 bytes are the expiration timestamp
         long timestamp = Longs.fromBytes(r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7]);
         if (System.currentTimeMillis() > (timestamp) ) {
             remove(key);
@@ -121,16 +121,18 @@ public class BerkeleyDbCache implements Cache {
 
     @Override
     public void clear() {
-        throw new UnsupportedOperationException("not implemented yet");
-    }
+        try {
+            String name = database.getDatabaseName();
+            database.close();
+            long truncated = environment.truncateDatabase(null,name,true);
+            DatabaseConfig dbConfig = new DatabaseConfig();
+            dbConfig.setAllowCreate(true);
+            database = environment.openDatabase(null, name, dbConfig);
 
-    @Override
-    public void commit() {
+        }catch(DatabaseException e){
+            throw new RuntimeException(e);
+        }
 
-    }
-
-    @Override
-    public void rollback() {
 
     }
 

@@ -17,10 +17,6 @@ public interface Cache {
 
     void clear();
 
-    void commit();
-
-    void rollback();
-
     void close();
 
 }

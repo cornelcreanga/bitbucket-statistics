@@ -82,15 +82,23 @@ public class TestMapDb {
         data = output.toBytes();
 
         Cache cache = new BerkeleyDbCache("/tmp/dbEnv","cache");
-        cache.put("key",new byte[]{2,2,2},1);
+        cache.put("key1",new byte[]{2,2,2},111);
+        cache.put("key2",new byte[]{2,2,2},111);
 
-        byte[] v = cache.get("key");
-        System.out.println(cache.get("key").length);
-        cache.remove("key");
-        //Thread.sleep(1000);
 
-        System.out.println(cache.get("key"));
-        cache.remove("key");
+        System.out.println(cache.size());
+        cache.clear();
+        System.out.println(cache.size());
+        cache.put("key1",new byte[]{2,2,2},111);
+        System.out.println(cache.size());
+
+//        byte[] v = cache.get("key");
+//        System.out.println(cache.get("key").length);
+//        cache.remove("key");
+//        //Thread.sleep(1000);
+//
+//        System.out.println(cache.get("key"));
+//        cache.remove("key");
     }
 
 }
